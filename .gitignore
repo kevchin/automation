@@ -1,42 +1,34 @@
 ```
-# Environment variables
-.env
-*.env
-*.env.*
-
-# Python
+# Dependencies
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-env/
-venv/
 .venv/
-.venv.bak/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-*.pot
-*.pyc
-*.pyo
-*.pyd
-.MF
-tags
-TAGS
-.idlerc/
-.python-version
-.pytest_cache/
-.mypy_cache/
+venv/
+env/
+.env
+.env.local
+*.env.*
 
-# Distribution / packaging
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python specific
+*.py[cod]
+*$py.class
+*.so
 .Python
 build/
 develop-eggs/
@@ -54,17 +46,8 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-# IDEs
-.vscode/
-.idea/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+.coverage
+htmlcov/
+.coverage.*
+.nosercov
 ```
