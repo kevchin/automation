@@ -117,22 +117,29 @@ class SlackKeywordMonitor:
         """
         print(f"Starting Slack monitor for keyword '{self.keyword}' in channel {self.channel_id}")
         print(f"Checking every {self.check_interval} seconds...")
-        
+
         while True:
             try:
                 # Get new messages since last check
                 new_messages = self.get_new_messages()
-                
+
                 # Find messages containing the keyword
                 keyword_messages = self.find_keyword_messages(new_messages)
-                
+
                 # Reply to each keyword-containing message
                 for msg in keyword_messages:
                     self.reply_to_message(msg)
-                
-                # Wait before next check
-                time.sleep(self.check_interval)
-                
+
+                # Wait before next check with countdown updates every 5 seconds
+                remaining_time = self.check_interval
+                while remaining_time > 0:
+                    if remaining_time % 5 == 0 or remaining_time <= 5:
+                        print(f"Next check in {remaining_time} seconds...")
+
+                    sleep_time = min(5, remaining_time)
+                    time.sleep(sleep_time)
+                    remaining_time -= sleep_time
+
             except KeyboardInterrupt:
                 print("\nShutting down Slack monitor...")
                 break
@@ -144,7 +151,7 @@ class SlackKeywordMonitor:
 def main():
     # Configuration
     BOT_TOKEN_FILE = 'SLACK_BOT_KEY.txt'
-    CHANNEL_ID = 'C1234567'
+    CHANNEL_ID = 'C1234567890'
     KEYWORD = 'bugbot'
     CHECK_INTERVAL = 30  # seconds
     
