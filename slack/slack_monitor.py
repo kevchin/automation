@@ -1,6 +1,7 @@
 import os
 import time
 import re
+from pathlib import Path
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
@@ -48,27 +49,32 @@ class SlackKeywordMonitor:
         try:
             # Set oldest timestamp to last checked time, or fetch recent messages if first run
             oldest = self.last_timestamp if self.last_timestamp else str(time.time() - self.check_interval * 2)
-            
+
             response = self.client.conversations_history(
                 channel=self.channel_id,
                 oldest=oldest,
-                inclusive=True
+                inclusive=True  # Back to True, but we'll handle duplicates carefully
             )
-            
+
             messages = response['messages']
             new_messages = []
-            
+            max_timestamp_in_batch = self.last_timestamp  # Track the max timestamp in this batch
+
             for msg in messages:
                 # Only consider messages that came after our last check
                 if self.last_timestamp is None or float(msg['ts']) > float(self.last_timestamp):
                     new_messages.append(msg)
-                    
-                    # Update the last timestamp to the newest message
-                    if self.last_timestamp is None or float(msg['ts']) > float(self.last_timestamp):
-                        self.last_timestamp = msg['ts']
-            
+
+                    # Track the max timestamp in this batch (don't update instance variable yet)
+                    if max_timestamp_in_batch is None or float(msg['ts']) > float(max_timestamp_in_batch):
+                        max_timestamp_in_batch = msg['ts']
+
+            # After processing all messages in this batch, update the instance variable
+            if max_timestamp_in_batch != self.last_timestamp:
+                self.last_timestamp = max_timestamp_in_batch
+
             return new_messages
-            
+
         except SlackApiError as e:
             print(f"Error fetching messages: {e}")
             return []
@@ -151,7 +157,25 @@ class SlackKeywordMonitor:
 def main():
     # Configuration
     BOT_TOKEN_FILE = 'SLACK_BOT_KEY.txt'
-    CHANNEL_ID = 'C1234567890'
+    # Read channel ID from file if present, otherwise fall back to env var
+    def _get_channel_id(filename: str = 'CHANNEL_ID.txt') -> str:
+        candidate = Path(__file__).resolve().parent / filename
+        if candidate.exists():
+            text = candidate.read_text(encoding='utf-8').strip()
+            for line in text.splitlines():
+                channel = line.strip()
+                if channel:
+                    return channel
+
+        env = os.environ.get('CHANNEL_ID')
+        if env:
+            return env
+
+        raise RuntimeError(
+            f"Channel ID not found. Create {candidate} with the channel ID, or set CHANNEL_ID env var."
+        )
+
+    CHANNEL_ID = _get_channel_id()
     KEYWORD = 'bugbot'
     CHECK_INTERVAL = 30  # seconds
     
